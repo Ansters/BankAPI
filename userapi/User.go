@@ -76,7 +76,7 @@ func (s *Service) Delete(id int) error {
 
 func (s *Service) CreateBank(b *BankAccount) error {
 	stmt := `INSERT INTO BankAccount(user_id, account_number, name, balance) VALUES($1, $2, $3, 0.0) RETURNING id`
-	row := s.DB.QueryRow(stmt, b.ID, b.AccountNumber, b.Name)
+	row := s.DB.QueryRow(stmt, b.UserID, b.AccountNumber, b.Name)
 	err := row.Scan(&b.ID)
 	return err
 }
