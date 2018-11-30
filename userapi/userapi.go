@@ -103,7 +103,7 @@ func StartServer(addr string, db *sql.DB) error {
 
 	r.GET("/users/:id", h.getUser)
 	r.GET("/users", h.getAllUser)
-	r.POST("/users/:id", h.createUser)
+	r.POST("/users", h.createUser)
 	r.PUT("/users/:id", h.updateUser)
 	r.DELETE("/users/:id", h.deleteUser)
 	r.POST("/users/:id/bankAccounts", h.createBank)
