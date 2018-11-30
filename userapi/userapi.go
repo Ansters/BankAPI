@@ -2,6 +2,8 @@ package userapi
 
 import (
 	"database/sql"
+	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,7 +27,19 @@ type Handler struct {
 }
 
 func (h *Handler) getUser(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
 
+	user, err := h.userBankService.FindByID(id)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }
 
 func (h *Handler) getAllUser(c *gin.Context) {
