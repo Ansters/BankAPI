@@ -3,17 +3,16 @@ package userapi
 import "database/sql"
 
 type User struct {
-	id        int    `json:"id"`
-	firstName string `json:"first_name"`
-	lastName  string `json:"last_name"`
+	ID        int    `json:"id"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
 }
 
 type BankAccount struct {
-	id            int     `json:"id"`
-	userID        int     `json:"user_id"`
-	accountNumber int     `json:"account_number"`
-	name          string  `json:"name"`
-	balance       float64 `json:"balance"`
+	ID            int     `json:"id"`
+	UserID        int     `json:"user_id"`
+	AccountNumber int     `json:"account_number"`
+	Balance       float64 `json:"balance"`
 }
 
 type Service struct {
@@ -21,10 +20,10 @@ type Service struct {
 }
 
 func (s *Service) FindByID(id int) (*User, error) {
-	stmt := "SELECT id, first_name, last_name FROM Users WHERE id=$1;"
+	stmt := `SELECT id, first_name, last_name FROM Users WHERE id=$1;`
 	row := s.DB.QueryRow(stmt, id)
 	var user User
-	err := row.Scan(&user.id, &user.firstName, &user.lastName)
+	err := row.Scan(&user.ID, &user.FirstName, &user.LastName)
 	if err != nil {
 		return nil, err
 	}
@@ -32,13 +31,27 @@ func (s *Service) FindByID(id int) (*User, error) {
 }
 
 func (s *Service) All() ([]User, error) {
-	return nil, nil
+	stmt := `SELECT id, first_name, last_name FROM Users;`
+	rows, err := s.DB.Query(stmt)
+	if err != nil {
+		return nil, err
+	}
+	var users []User
+	for rows.Next() {
+		var user User
+		err := rows.Scan(&user.ID, &user.FirstName, &user.LastName)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+	return users, nil
 }
 
 func (s *Service) CreateUser(user *User) error {
-	stmt := `INSERT INTO Users (first_name, last_name) VALUES($1, $2) RETURN id`
-	row := s.DB.QueryRow(stmt, user.firstName, user.lastName)
-	err := row.Scan(&user.id)
+	stmt := `INSERT INTO Users (first_name, last_name) VALUES($1, $2) RETURNING id`
+	row := s.DB.QueryRow(stmt, user.FirstName, user.LastName)
+	err := row.Scan(&user.ID)
 	return err
 }
 

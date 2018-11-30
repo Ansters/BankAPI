@@ -43,7 +43,12 @@ func (h *Handler) getUser(c *gin.Context) {
 }
 
 func (h *Handler) getAllUser(c *gin.Context) {
-
+	users, err := h.userBankService.All()
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	c.JSON(http.StatusOK, users)
 }
 
 func (h *Handler) createUser(c *gin.Context) {
