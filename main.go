@@ -15,5 +15,5 @@ func main() {
 		log.Fatal(err)
 	}
 
-	userapi.StartServer(":"+os.Getenv("8080"), db)
+	userapi.StartServer(":"+os.Getenv("PORT"), db)
 }
