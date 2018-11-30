@@ -21,7 +21,14 @@ type Service struct {
 }
 
 func (s *Service) FindByID(id int) (*User, error) {
-	return nil, nil
+	stmt := "SELECT id, first_name, last_name FROM Users WHERE id=$1;"
+	row := s.DB.QueryRow(stmt, id)
+	var user User
+	err := row.Scan(&user.id, &user.firstName, &user.lastName)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
 
 func (s *Service) All() ([]User, error) {
