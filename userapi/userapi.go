@@ -13,7 +13,7 @@ type UserBankService interface {
 	All() ([]User, error)
 	CreateUser(user *User) error
 	Update(user *User) error
-	Delete(user *User) error
+	Delete(id int) error
 	CreateBank(id int, b BankAccount) error
 	AllBankByID(id int) ([]BankAccount, error)
 	DeleteBankByID(id int) error
@@ -67,11 +67,38 @@ func (h *Handler) createUser(c *gin.Context) {
 }
 
 func (h *Handler) updateUser(c *gin.Context) {
-
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	var user User
+	user.ID = id
+	err = c.ShouldBindJSON(&user)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	err = h.userBankService.Update(&user)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	c.JSON(http.StatusOK, user)
 }
 
 func (h *Handler) deleteUser(c *gin.Context) {
-
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	err = h.userBankService.Delete(id)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	c.JSON(http.StatusOK, id)
 }
 
 func (h *Handler) createBank(c *gin.Context) {

@@ -31,7 +31,7 @@ func (s *Service) FindByID(id int) (*User, error) {
 }
 
 func (s *Service) All() ([]User, error) {
-	stmt := `SELECT id, first_name, last_name FROM Users;`
+	stmt := `SELECT id, first_name, last_name FROM Users ORDER BY id ASC;`
 	rows, err := s.DB.Query(stmt)
 	if err != nil {
 		return nil, err
@@ -56,12 +56,15 @@ func (s *Service) CreateUser(user *User) error {
 }
 
 func (s *Service) Update(user *User) error {
-
-	return nil
+	stmt := `UPDATE Users SET first_name=$1, last_name=$2 WHERE id=$3;`
+	_, err := s.DB.Exec(stmt, user.FirstName, user.LastName, user.ID)
+	return err
 }
 
-func (s *Service) Delete(user *User) error {
-	return nil
+func (s *Service) Delete(id int) error {
+	stmt := `DELETE FROM Users WHERE id=$1;`
+	_, err := s.DB.Exec(stmt, id)
+	return err
 }
 
 func (s *Service) CreateBank(id int, b BankAccount) error {
