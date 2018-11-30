@@ -11,8 +11,15 @@ type User struct {
 type BankAccount struct {
 	ID            int     `json:"id"`
 	UserID        int     `json:"user_id"`
-	AccountNumber int     `json:"account_number"`
+	AccountNumber string  `json:"account_number"`
+	Name          string  `json:"name"`
 	Balance       float64 `json:"balance"`
+}
+
+type Amount struct {
+	Amount float64 `JSON:"amount"`
+	From   int     `JSON:"from"`
+	To     int     `JSON:"to"`
 }
 
 type Service struct {
@@ -67,24 +74,47 @@ func (s *Service) Delete(id int) error {
 	return err
 }
 
-func (s *Service) CreateBank(id int, b BankAccount) error {
-	return nil
+func (s *Service) CreateBank(b *BankAccount) error {
+	stmt := `INSERT INTO BankAccount(user_id, account_number, name, balance) VALUES($1, $2, $3, 0.0) RETURNING id`
+	row := s.DB.QueryRow(stmt, b.ID, b.AccountNumber, b.Name)
+	err := row.Scan(&b.ID)
+	return err
 }
 
 func (s *Service) AllBankByID(id int) ([]BankAccount, error) {
-	return nil, nil
+	stmt := `SELECT id, user_id, account_number, name, balance FROM BankAccount WHERE user_id=$1;`
+	rows, err := s.DB.Query(stmt, id)
+	if err != nil {
+		return nil, err
+	}
+	var bankAccs []BankAccount
+	for rows.Next() {
+		var b BankAccount
+		err := rows.Scan(&b.ID, &b.UserID, &b.AccountNumber, &b.Name, &b.Balance)
+		if err != nil {
+			return nil, err
+		}
+		bankAccs = append(bankAccs, b)
+	}
+	return bankAccs, nil
 }
 
 func (s *Service) DeleteBankByID(id int) error {
-	return nil
+	stmt := `DELETE FROM BankAccount WHERE id=$1;`
+	_, err := s.DB.Exec(stmt, id)
+	return err
 }
 
-func (s *Service) Withdraw(id int, amount float64) error {
-	return nil
+func (s *Service) Withdraw(id int, amount Amount) error {
+	stmt := `UPDATE BankAccount SET balance = balance-$1 WHERE id=$2;`
+	_, err := s.DB.Exec(stmt, amount.Amount, id)
+	return err
 }
 
-func (s *Service) Deposit(id int, amount float64) error {
-	return nil
+func (s *Service) Deposit(id int, amount Amount) error {
+	stmt := `UPDATE BankAccount SET balance = balance+$1 WHERE id=$2;`
+	_, err := s.DB.Exec(stmt, amount.Amount, id)
+	return err
 }
 
 func (s *Service) Transfer(fromID int, toID int, amount float64) error {

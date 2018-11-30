@@ -14,11 +14,11 @@ type UserBankService interface {
 	CreateUser(user *User) error
 	Update(user *User) error
 	Delete(id int) error
-	CreateBank(id int, b BankAccount) error
+	CreateBank(b *BankAccount) error
 	AllBankByID(id int) ([]BankAccount, error)
 	DeleteBankByID(id int) error
-	Withdraw(id int, amount float64) error
-	Deposit(id int, amount float64) error
+	Withdraw(id int, amount Amount) error
+	Deposit(id int, amount Amount) error
 	Transfer(fromID int, toID int, amount float64) error
 }
 
@@ -102,27 +102,113 @@ func (h *Handler) deleteUser(c *gin.Context) {
 }
 
 func (h *Handler) createBank(c *gin.Context) {
-
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	var bankAccount BankAccount
+	bankAccount.UserID = id
+	bankAccount.Balance = 0.0
+	err = c.ShouldBindJSON(&bankAccount)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	err = h.userBankService.CreateBank(&bankAccount)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	c.JSON(http.StatusCreated, bankAccount)
 }
 
 func (h *Handler) getAllBankByID(c *gin.Context) {
-
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	banks, err := h.userBankService.AllBankByID(id)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	c.JSON(http.StatusOK, banks)
 }
 
 func (h *Handler) deleteBankAccount(c *gin.Context) {
-
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	err = h.userBankService.DeleteBankByID(id)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	c.JSON(http.StatusOK, id)
 }
 
 func (h *Handler) withdrawMoney(c *gin.Context) {
-
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	var a Amount
+	err = c.ShouldBindJSON(&a)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	err = h.userBankService.Withdraw(id, a)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	c.JSON(http.StatusOK, id)
 }
 
 func (h *Handler) depositMoney(c *gin.Context) {
-
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	var a Amount
+	err = c.ShouldBindJSON(&a)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	err = h.userBankService.Deposit(id, a)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	c.JSON(http.StatusOK, id)
 }
 
 func (h *Handler) transferMoney(c *gin.Context) {
-
+	var amount Amount
+	err := c.ShouldBindJSON(&amount)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	err = h.userBankService.Withdraw(amount.From, amount)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	err = h.userBankService.Deposit(amount.To, amount)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	c.JSON(http.StatusOK, "Success")
 }
 
 func StartServer(addr string, db *sql.DB) error {
@@ -140,7 +226,7 @@ func StartServer(addr string, db *sql.DB) error {
 	r.DELETE("/users/:id", h.deleteUser)
 	r.POST("/users/:id/bankAccounts", h.createBank)
 	r.GET("/users/:id/bankAccounts", h.getAllBankByID)
-	r.DELETE("/bankAccounts", h.deleteBankAccount)
+	r.DELETE("/bankAccounts/:id", h.deleteBankAccount)
 	r.PUT("/bankAccounts/:id/withdraw", h.withdrawMoney)
 	r.PUT("/bankAccounts/:id/deposit", h.depositMoney)
 	r.POST("/transfers", h.transferMoney)
