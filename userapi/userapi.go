@@ -1,4 +1,4 @@
-package user
+package userapi
 
 import (
 	"database/sql"
@@ -81,7 +81,7 @@ func StartServer(addr string, db *sql.DB) error {
 	r.POST("/users/:id", h.createUser)
 	r.PUT("/users/:id", h.updateUser)
 	r.DELETE("/users/:id", h.deleteUser)
-	r.POST("/users/:id", h.createBank)
+	r.POST("/users/:id/bankAccounts", h.createBank)
 	r.GET("/users/:id/bankAccounts", h.getAllBankByID)
 	r.DELETE("/bankAccounts", h.deleteBankAccount)
 	r.PUT("/bankAccounts/:id/withdraw", h.withdrawMoney)

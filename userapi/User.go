@@ -1,4 +1,4 @@
-package user
+package userapi
 
 import "database/sql"
 
