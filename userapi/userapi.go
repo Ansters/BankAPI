@@ -47,7 +47,18 @@ func (h *Handler) getAllUser(c *gin.Context) {
 }
 
 func (h *Handler) createUser(c *gin.Context) {
-
+	var user User
+	err := c.ShouldBindJSON(&user)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	err = h.userBankService.CreateUser(&user)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	c.JSON(http.StatusCreated, user)
 }
 
 func (h *Handler) updateUser(c *gin.Context) {

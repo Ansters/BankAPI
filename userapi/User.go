@@ -36,10 +36,14 @@ func (s *Service) All() ([]User, error) {
 }
 
 func (s *Service) CreateUser(user *User) error {
-	return nil
+	stmt := `INSERT INTO Users (first_name, last_name) VALUES($1, $2) RETURN id`
+	row := s.DB.QueryRow(stmt, user.firstName, user.lastName)
+	err := row.Scan(&user.id)
+	return err
 }
 
 func (s *Service) Update(user *User) error {
+
 	return nil
 }
 
